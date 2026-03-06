@@ -1,28 +1,28 @@
-import 'dotenv/config'
-import express from 'express'
-import cors from 'cors'
-import helmet from 'helmet'
-import menuRoutes from './routes/menu.routes'
-import outletRoutes from './routes/outlet.routes'
-import { errorHandler } from './middleware/errors'
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import menuRoutes from "./routes/menu.routes";
+import outletRoutes from "./routes/outlet.routes";
+import { errorHandler } from "./middleware/errors";
 
-const app = express()
+const app = express();
 
-app.use(helmet())
-app.use(cors())
-app.use(express.json())
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.json({ message: 'OmniFlow POS server is running' })
-})
+app.get("/", (req, res) => {
+  res.json({ message: "OmniFlow POS server is running" });
+});
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' })
-})
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok" });
+});
 
-app.use('/api/menu', menuRoutes)
-app.use('/api/outlets', outletRoutes)
+app.use("/api/menu", menuRoutes);
+app.use("/api/outlets", outletRoutes);
 
-app.use(errorHandler)
+app.use(errorHandler);
 
-export default app
+export default app;
