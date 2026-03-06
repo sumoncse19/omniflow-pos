@@ -3,6 +3,7 @@ import { fetchOutletMenu, assignMenuItem, removeMenuItem } from '../api/outlets'
 import { fetchMenuItems } from '../api/menu'
 import type { OutletMenuItem } from '../api/outlets'
 import type { MenuItem } from '../api/menu'
+import InventoryPanel from './InventoryPanel'
 
 interface Props {
   outletId: number
@@ -14,6 +15,7 @@ export default function OutletDetail({ outletId }: Props) {
   const [selectedItemId, setSelectedItemId] = useState('')
   const [overridePrice, setOverridePrice] = useState('')
   const [error, setError] = useState('')
+  const [menuVersion, setMenuVersion] = useState(0)
 
   const load = useCallback(async () => {
     try {
@@ -46,6 +48,7 @@ export default function OutletDetail({ outletId }: Props) {
       setSelectedItemId('')
       setOverridePrice('')
       await load()
+      setMenuVersion((v) => v + 1)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to assign')
     }
@@ -56,6 +59,7 @@ export default function OutletDetail({ outletId }: Props) {
       setError('')
       await removeMenuItem(outletId, menuItemId)
       await load()
+      setMenuVersion((v) => v + 1)
     } catch {
       setError('Failed to remove item')
     }
@@ -134,6 +138,8 @@ export default function OutletDetail({ outletId }: Props) {
           )}
         </tbody>
       </table>
+
+      <InventoryPanel outletId={outletId} refreshKey={menuVersion} />
     </div>
   )
 }
