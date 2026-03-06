@@ -29,3 +29,10 @@ export async function upsertStock(
 
   return rows[0];
 }
+
+export async function removeStock(outletId: number, menuItemId: number) {
+  await pool.query(
+    "DELETE FROM inventory WHERE outlet_id = $1 AND menu_item_id = $2",
+    [outletId, menuItemId],
+  );
+}

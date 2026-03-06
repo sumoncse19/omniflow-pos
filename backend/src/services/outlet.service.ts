@@ -1,4 +1,5 @@
 import * as outletRepo from "../repositories/outlet.repo";
+import * as inventoryRepo from "../repositories/inventory.repo";
 import { AppError } from "../middleware/errors";
 
 export async function getAll() {
@@ -32,4 +33,5 @@ export async function removeMenuItem(outletId: number, menuItemId: number) {
   const removed = await outletRepo.removeMenuItem(outletId, menuItemId);
   if (!removed)
     throw new AppError("Menu item not assigned to this outlet", 404);
+  await inventoryRepo.removeStock(outletId, menuItemId);
 }
