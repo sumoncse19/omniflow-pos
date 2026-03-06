@@ -27,4 +27,13 @@ CREATE TABLE outlet_menu_items (
   UNIQUE(outlet_id, menu_item_id)
 );
 
+CREATE TABLE inventory (
+  id SERIAL PRIMARY KEY,
+  outlet_id INT NOT NULL REFERENCES outlets(id) ON DELETE CASCADE,
+  menu_item_id INT NOT NULL REFERENCES menu_items(id) ON DELETE CASCADE,
+  stock INT NOT NULL CHECK (stock >= 0),
+  UNIQUE(outlet_id, menu_item_id)
+);
+
 CREATE INDEX idx_outlet_menu ON outlet_menu_items(outlet_id);
+CREATE INDEX idx_inventory ON inventory(outlet_id, menu_item_id);
