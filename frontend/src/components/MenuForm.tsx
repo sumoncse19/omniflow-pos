@@ -1,37 +1,30 @@
-import { useState, useEffect } from 'react'
-import type { MenuItem } from '../api/menu'
+import { useState, type SubmitEvent } from "react";
+import type { MenuItem } from "../api/menu";
 
 interface Props {
-  item: MenuItem | null
-  onSave: (name: string, price: number) => void
-  onCancel: () => void
+  item: MenuItem | null;
+  onSave: (name: string, price: number) => void;
+  onCancel: () => void;
 }
 
 export default function MenuForm({ item, onSave, onCancel }: Props) {
-  const [name, setName] = useState('')
-  const [price, setPrice] = useState('')
+  const [name, setName] = useState(item?.name ?? "");
+  const [price, setPrice] = useState(item?.base_price ?? "");
 
-  useEffect(() => {
-    if (item) {
-      setName(item.name)
-      setPrice(item.base_price)
-    } else {
-      setName('')
-      setPrice('')
-    }
-  }, [item])
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const parsed = parseFloat(price)
-    if (!name.trim() || isNaN(parsed) || parsed <= 0) return
-    onSave(name.trim(), parsed)
+  function handleSubmit(e: SubmitEvent) {
+    e.preventDefault();
+    const parsed = parseFloat(price);
+    if (!name.trim() || isNaN(parsed) || parsed <= 0) return;
+    onSave(name.trim(), parsed);
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 rounded-lg shadow mb-6">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white p-4 rounded-lg shadow mb-6"
+    >
       <h2 className="text-lg font-semibold mb-3">
-        {item ? 'Edit Menu Item' : 'Add Menu Item'}
+        {item ? "Edit Menu Item" : "Add Menu Item"}
       </h2>
       <div className="flex gap-3">
         <input
@@ -56,7 +49,7 @@ export default function MenuForm({ item, onSave, onCancel }: Props) {
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          {item ? 'Update' : 'Add'}
+          {item ? "Update" : "Add"}
         </button>
         {item && (
           <button
@@ -69,5 +62,5 @@ export default function MenuForm({ item, onSave, onCancel }: Props) {
         )}
       </div>
     </form>
-  )
+  );
 }

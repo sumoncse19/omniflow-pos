@@ -1,56 +1,66 @@
-import { useState, useEffect, useCallback } from 'react'
-import { fetchMenuItems, createMenuItem, updateMenuItem, deleteMenuItem } from '../api/menu'
-import type { MenuItem } from '../api/menu'
-import MenuForm from '../components/MenuForm'
+import { useState, useEffect } from "react";
+import {
+  fetchMenuItems,
+  createMenuItem,
+  updateMenuItem,
+  deleteMenuItem,
+} from "../api/menu";
+import type { MenuItem } from "../api/menu";
+import MenuForm from "../components/MenuForm";
 
 export default function MenuPage() {
-  const [items, setItems] = useState<MenuItem[]>([])
-  const [editing, setEditing] = useState<MenuItem | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [items, setItems] = useState<MenuItem[]>([]);
+  const [editing, setEditing] = useState<MenuItem | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [version, setVersion] = useState(0);
 
-  const load = useCallback(async () => {
-    try {
-      setError('')
-      const data = await fetchMenuItems()
-      setItems(data)
-    } catch {
-      setError('Failed to load menu items')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    let cancelled = false;
+    fetchMenuItems()
+      .then((data) => {
+        if (cancelled) return;
+        setItems(data);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Failed to load menu items");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [version]);
 
   async function handleSave(name: string, price: number) {
     try {
-      setError('')
+      setError("");
       if (editing) {
-        await updateMenuItem(editing.id, name, price)
+        await updateMenuItem(editing.id, name, price);
       } else {
-        await createMenuItem(name, price)
+        await createMenuItem(name, price);
       }
-      setEditing(null)
-      await load()
+      setEditing(null);
+      setVersion((v) => v + 1);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      setError(err instanceof Error ? err.message : "Something went wrong");
     }
   }
 
   async function handleDelete(id: number) {
-    if (!confirm('Delete this item?')) return
+    if (!confirm("Delete this item?")) return;
     try {
-      setError('')
-      await deleteMenuItem(id)
-      await load()
+      setError("");
+      await deleteMenuItem(id);
+      setVersion((v) => v + 1);
     } catch {
-      setError('Failed to delete item')
+      setError("Failed to delete item");
     }
   }
 
   if (loading) {
-    return <p className="text-center py-10 text-gray-500">Loading...</p>
+    return <p className="text-center py-10 text-gray-500">Loading...</p>;
   }
 
   return (
@@ -58,10 +68,13 @@ export default function MenuPage() {
       <h1 className="text-2xl font-bold mb-4">Menu Items</h1>
 
       {error && (
-        <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">{error}</div>
+        <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">
+          {error}
+        </div>
       )}
 
       <MenuForm
+        key={editing?.id ?? "new"}
         item={editing}
         onSave={handleSave}
         onCancel={() => setEditing(null)}
@@ -71,16 +84,24 @@ export default function MenuPage() {
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Name</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Base Price</th>
-              <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">Actions</th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                Name
+              </th>
+              <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                Base Price
+              </th>
+              <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {items.map((item) => (
               <tr key={item.id} className="border-t hover:bg-gray-50">
                 <td className="px-4 py-3">{item.name}</td>
-                <td className="px-4 py-3">${parseFloat(item.base_price).toFixed(2)}</td>
+                <td className="px-4 py-3">
+                  ${parseFloat(item.base_price).toFixed(2)}
+                </td>
                 <td className="px-4 py-3 text-right">
                   <button
                     onClick={() => setEditing(item)}
@@ -108,5 +129,5 @@ export default function MenuPage() {
         </table>
       </div>
     </div>
-  )
+  );
 }
