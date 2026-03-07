@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import path from "path";
 import cors from "cors";
 import helmet from "helmet";
 import menuRoutes from "./routes/menu.routes";
@@ -15,11 +16,7 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.json({ message: "OmniFlow POS server is running" });
-});
-
-app.get("/api/health", (req, res) => {
+app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
@@ -30,5 +27,12 @@ app.use("/api/outlets/:outletId/sales", salesRoutes);
 app.use("/api/reports", reportsRoutes);
 
 app.use(errorHandler);
+
+// Serve frontend in production
+const clientPath = path.join(__dirname, "../frontend/dist");
+app.use(express.static(clientPath));
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(clientPath, "index.html"));
+});
 
 export default app;
