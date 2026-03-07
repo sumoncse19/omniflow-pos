@@ -126,8 +126,18 @@ export default function InventoryPanel({ outletId }: Props) {
         </thead>
         <tbody>
           {items.map((item) => (
-            <tr key={item.id} className="border-t hover:bg-gray-50">
-              <td className="px-4 py-3">{item.name}</td>
+            <tr
+              key={item.id}
+              className={`border-t hover:bg-gray-50 ${item.stock === 0 ? "bg-red-50" : ""}`}
+            >
+              <td className="px-4 py-3">
+                {item.name}
+                {item.stock === 0 && (
+                  <span className="ml-2 text-xs text-red-600 font-medium">
+                    Out of stock
+                  </span>
+                )}
+              </td>
               <td className="px-4 py-3">
                 {editingId === item.id ? (
                   <input
@@ -139,7 +149,13 @@ export default function InventoryPanel({ outletId }: Props) {
                     autoFocus
                   />
                 ) : (
-                  item.stock
+                  <span
+                    className={
+                      item.stock === 0 ? "text-red-600 font-medium" : ""
+                    }
+                  >
+                    {item.stock}
+                  </span>
                 )}
               </td>
               <td className="px-4 py-3 text-right">

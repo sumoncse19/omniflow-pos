@@ -8,6 +8,7 @@ import { fetchMenuItems } from "../api/menu";
 import type { OutletMenuItem } from "../api/outlets";
 import type { MenuItem } from "../api/menu";
 import InventoryPanel from "./InventoryPanel";
+import SalesPanel from "./SalesPanel";
 
 interface Props {
   outletId: number;
@@ -154,7 +155,15 @@ export default function OutletDetail({ outletId }: Props) {
         </tbody>
       </table>
 
-      <InventoryPanel key={menuVersion} outletId={outletId} />
+      <InventoryPanel
+        key={`inv-${menuVersion}-${version}`}
+        outletId={outletId}
+      />
+      <SalesPanel
+        key={`sales-${menuVersion}`}
+        outletId={outletId}
+        onSaleComplete={() => setVersion((v) => v + 1)}
+      />
     </div>
   );
 }

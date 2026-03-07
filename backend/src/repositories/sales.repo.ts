@@ -1,4 +1,5 @@
 import { pool } from "../config/db";
+import { AppError } from "../middleware/errors";
 
 export async function getByOutlet(outletId: number) {
   const { rows } = await pool.query(
@@ -26,7 +27,7 @@ export async function createSale(
       );
 
       if (result.rowCount === 0) {
-        throw new Error(`Insufficient stock for ${item.name}`);
+        throw new AppError(`Insufficient stock for ${item.name}`, 400);
       }
     }
 
