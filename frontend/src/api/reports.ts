@@ -15,8 +15,11 @@ export async function fetchRevenueByOutlet(): Promise<OutletRevenue[]> {
   return res.json();
 }
 
-export async function fetchTopItems(limit = 5): Promise<TopItem[]> {
-  const res = await fetch(`/api/reports/top-items?limit=${limit}`);
+export async function fetchTopItems(
+  outletId: number,
+  limit = 5,
+): Promise<TopItem[]> {
+  const res = await fetch(`/api/reports/top-items/${outletId}?limit=${limit}`);
   if (!res.ok) throw new Error("Failed to fetch top items");
   return res.json();
 }
