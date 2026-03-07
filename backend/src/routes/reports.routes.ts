@@ -4,6 +4,6 @@ import * as reportsCtrl from "../controllers/reports.controller";
 const router = Router();
 
 router.get("/revenue", reportsCtrl.getRevenueByOutlet);
-router.get("/top-items", reportsCtrl.getTopItems);
+router.get("/top-items/:outletId", reportsCtrl.getTopItems);
 
 export default router;

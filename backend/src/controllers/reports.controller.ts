@@ -20,8 +20,9 @@ export async function getTopItems(
   next: NextFunction,
 ) {
   try {
+    const outletId = Number(req.params.outletId);
     const limit = Number(req.query.limit) || 5;
-    const data = await reportsService.getTopItems(limit);
+    const data = await reportsService.getTopItems(outletId, limit);
     res.json(data);
   } catch (err) {
     next(err);

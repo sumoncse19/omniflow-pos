@@ -11,14 +11,15 @@ export async function getRevenueByOutlet() {
   return rows;
 }
 
-export async function getTopItems(limit: number) {
+export async function getTopItems(outletId: number, limit: number) {
   const { rows } = await pool.query(
     `SELECT item->>'name' AS name, SUM((item->>'qty')::int) AS total_qty
      FROM sales, jsonb_array_elements(sales.items) AS item
+     WHERE sales.outlet_id = $1
      GROUP BY name
      ORDER BY total_qty DESC
-     LIMIT $1`,
-    [limit],
+     LIMIT $2`,
+    [outletId, limit],
   );
   return rows;
 }
