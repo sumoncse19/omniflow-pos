@@ -1,4 +1,4 @@
-.PHONY: dev db backend frontend stop install
+.PHONY: dev db backend frontend stop install db-reset
 
 # Run everything: database, backend, frontend
 dev: db backend frontend
