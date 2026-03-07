@@ -1,8 +1,9 @@
 import { useState } from "react";
 import MenuPage from "./pages/MenuPage";
 import OutletsPage from "./pages/OutletsPage";
+import ReportsPage from "./pages/ReportsPage";
 
-type Page = "menu" | "outlets";
+type Page = "menu" | "outlets" | "reports";
 
 export default function App() {
   const [page, setPage] = useState<Page>("menu");
@@ -24,11 +25,18 @@ export default function App() {
           >
             Outlets
           </button>
+          <button
+            onClick={() => setPage("reports")}
+            className={`text-sm font-medium ${page === "reports" ? "text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            Reports
+          </button>
         </div>
       </nav>
       <main className="max-w-5xl mx-auto px-4 py-6">
         {page === "menu" && <MenuPage />}
         {page === "outlets" && <OutletsPage />}
+        {page === "reports" && <ReportsPage />}
       </main>
     </div>
   );

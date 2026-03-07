@@ -6,6 +6,7 @@ import menuRoutes from "./routes/menu.routes";
 import outletRoutes from "./routes/outlet.routes";
 import inventoryRoutes from "./routes/inventory.routes";
 import salesRoutes from "./routes/sales.routes";
+import reportsRoutes from "./routes/reports.routes";
 import { errorHandler } from "./middleware/errors";
 
 const app = express();
@@ -26,6 +27,7 @@ app.use("/api/menu", menuRoutes);
 app.use("/api/outlets", outletRoutes);
 app.use("/api/outlets/:outletId/inventory", inventoryRoutes);
 app.use("/api/outlets/:outletId/sales", salesRoutes);
+app.use("/api/reports", reportsRoutes);
 
 app.use(errorHandler);
 
