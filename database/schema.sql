@@ -35,5 +35,24 @@ CREATE TABLE inventory (
   UNIQUE(outlet_id, menu_item_id)
 );
 
+CREATE TABLE receipt_sequences (
+  id SERIAL PRIMARY KEY,
+  outlet_id INT NOT NULL REFERENCES outlets(id) ON DELETE CASCADE,
+  sale_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  last_number INT NOT NULL DEFAULT 0,
+  UNIQUE(outlet_id, sale_date)
+);
+
+CREATE TABLE sales (
+  id SERIAL PRIMARY KEY,
+  outlet_id INT NOT NULL REFERENCES outlets(id) ON DELETE CASCADE,
+  receipt_number VARCHAR(30) NOT NULL,
+  items JSONB NOT NULL,
+  total_amount NUMERIC(10, 2) NOT NULL CHECK (total_amount > 0),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
 CREATE INDEX idx_outlet_menu ON outlet_menu_items(outlet_id);
 CREATE INDEX idx_inventory ON inventory(outlet_id, menu_item_id);
+CREATE INDEX idx_sales_outlet ON sales(outlet_id);
+CREATE INDEX idx_sales_receipt ON sales(receipt_number);
