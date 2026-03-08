@@ -120,9 +120,7 @@ export default function SalesPanel({ outletId, onSaleComplete }: Props) {
   }
 
   return (
-    <div className="mt-6">
-      <h3 className="text-lg font-semibold mb-3">Sales</h3>
-
+    <div>
       {error && (
         <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">
           {error}

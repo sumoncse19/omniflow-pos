@@ -22,6 +22,9 @@ export default function OutletDetail({ outletId }: Props) {
   const [error, setError] = useState("");
   const [menuVersion, setMenuVersion] = useState(0);
   const [version, setVersion] = useState(0);
+  const [activeTab, setActiveTab] = useState<"Menu" | "Inventory" | "Sales">(
+    "Menu",
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -71,100 +74,135 @@ export default function OutletDetail({ outletId }: Props) {
     }
   }
 
-  return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <h2 className="text-lg font-semibold mb-3">Outlet Menu</h2>
+  const tabs = ["Menu", "Inventory", "Sales"] as const;
 
+  return (
+    <div className="bg-white rounded-lg shadow">
       {error && (
-        <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">
+        <div className="bg-red-100 text-red-700 px-4 py-2 rounded m-4">
           {error}
         </div>
       )}
 
-      {available.length > 0 && (
-        <form onSubmit={handleAssign} className="flex gap-3 mb-4">
-          <select
-            value={selectedItemId}
-            onChange={(e) => setSelectedItemId(e.target.value)}
-            className="border rounded px-3 py-2 flex-1"
-            required
-          >
-            <option value="">Select item to assign...</option>
-            {available.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name} (${parseFloat(item.base_price).toFixed(2)})
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            placeholder="Override price"
-            step="0.01"
-            min="0.01"
-            value={overridePrice}
-            onChange={(e) => setOverridePrice(e.target.value)}
-            className="border rounded px-3 py-2 w-36"
-          />
+      <div className="border-b flex">
+        {tabs.map((tab) => (
           <button
-            type="submit"
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-6 py-3 text-sm font-medium transition-colors ${
+              activeTab === tab
+                ? "border-b-2 border-blue-600 text-blue-600"
+                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+            }`}
           >
-            Assign
+            {tab}
+            {tab === "Menu" && menu.length > 0 && (
+              <span className="ml-2 bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">
+                {menu.length}
+              </span>
+            )}
           </button>
-        </form>
-      )}
+        ))}
+      </div>
 
-      <table className="w-full">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
-              Item
-            </th>
-            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
-              Price
-            </th>
-            <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {menu.map((item) => (
-            <tr key={item.id} className="border-t hover:bg-gray-50">
-              <td className="px-4 py-3">{item.name}</td>
-              <td className="px-4 py-3">
-                ${parseFloat(item.price).toFixed(2)}
-              </td>
-              <td className="px-4 py-3 text-right">
-                <button
-                  onClick={() => handleRemove(item.id)}
-                  className="text-red-600 hover:text-red-800"
+      <div className="p-4">
+        {activeTab === "Menu" && (
+          <>
+            {available.length > 0 && (
+              <form onSubmit={handleAssign} className="flex gap-3 mb-4">
+                <select
+                  value={selectedItemId}
+                  onChange={(e) => setSelectedItemId(e.target.value)}
+                  className="border rounded px-3 py-2 flex-1"
+                  required
                 >
-                  Remove
+                  <option value="">Select item to assign...</option>
+                  {available.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} (${parseFloat(item.base_price).toFixed(2)})
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  placeholder="Override price"
+                  step="0.01"
+                  min="0.01"
+                  value={overridePrice}
+                  onChange={(e) => setOverridePrice(e.target.value)}
+                  className="border rounded px-3 py-2 w-36"
+                />
+                <button
+                  type="submit"
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                >
+                  Assign
                 </button>
-              </td>
-            </tr>
-          ))}
-          {menu.length === 0 && (
-            <tr>
-              <td colSpan={3} className="px-4 py-6 text-center text-gray-400">
-                No items assigned
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+              </form>
+            )}
 
-      <InventoryPanel
-        key={`inv-${menuVersion}-${version}`}
-        outletId={outletId}
-        onStockChange={() => setVersion((v) => v + 1)}
-      />
-      <SalesPanel
-        key={`sales-${menuVersion}-${version}`}
-        outletId={outletId}
-        onSaleComplete={() => setVersion((v) => v + 1)}
-      />
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                    Item
+                  </th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                    Price
+                  </th>
+                  <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {menu.map((item) => (
+                  <tr key={item.id} className="border-t hover:bg-gray-50">
+                    <td className="px-4 py-3">{item.name}</td>
+                    <td className="px-4 py-3">
+                      ${parseFloat(item.price).toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => handleRemove(item.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {menu.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={3}
+                      className="px-4 py-6 text-center text-gray-400"
+                    >
+                      No items assigned
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </>
+        )}
+
+        {activeTab === "Inventory" && (
+          <InventoryPanel
+            key={`inv-${menuVersion}-${version}`}
+            outletId={outletId}
+            onStockChange={() => setVersion((v) => v + 1)}
+          />
+        )}
+
+        {activeTab === "Sales" && (
+          <SalesPanel
+            key={`sales-${menuVersion}-${version}`}
+            outletId={outletId}
+            onSaleComplete={() => setVersion((v) => v + 1)}
+          />
+        )}
+      </div>
     </div>
   );
 }
