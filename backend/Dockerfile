@@ -1,3 +1,5 @@
+# If we want to deploy frontend and backend separate container then we need this Dockerfile.
+
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json tsconfig.json ./

@@ -1,3 +1,5 @@
+# If we want to deploy frontend and backend in a single container then we need this Dockerfile.
+
 FROM node:20-alpine AS frontend
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
