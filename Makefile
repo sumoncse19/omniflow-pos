@@ -1,4 +1,4 @@
-.PHONY: dev db backend frontend stop install db-reset
+.PHONY: dev db backend frontend stop install db-reset seed
 
 # Run everything: database, backend, frontend
 dev: db backend frontend
@@ -21,13 +21,18 @@ frontend:
 # Stop everything
 stop:
 	-kill $$(lsof -t -i:5000) 2>/dev/null || true
-	-kill $$(lsof -t -i:3000) 2>/dev/null || true
+	-kill $$(lsof -t -i:5175) 2>/dev/null || true
 	docker compose down
 
 # Install dependencies for both
 install:
 	cd backend && npm install
 	cd frontend && npm install
+
+# Run seed data against the running database
+seed:
+	docker compose exec db psql -U postgres -d omniflow_pos -f /docker-entrypoint-initdb.d/02-seed.sql
+	@echo "Seed data loaded"
 
 # Reset database (drops volume and re-creates)
 db-reset:

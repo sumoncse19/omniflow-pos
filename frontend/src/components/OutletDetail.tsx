@@ -9,6 +9,7 @@ import type { OutletMenuItem } from "../api/outlets";
 import type { MenuItem } from "../api/menu";
 import InventoryPanel from "./InventoryPanel";
 import SalesPanel from "./SalesPanel";
+import ConfirmDialog from "./ConfirmDialog";
 
 interface Props {
   outletId: number;
@@ -25,6 +26,7 @@ export default function OutletDetail({ outletId }: Props) {
   const [activeTab, setActiveTab] = useState<"Menu" | "Inventory" | "Sales">(
     "Menu",
   );
+  const [removeId, setRemoveId] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,9 +69,11 @@ export default function OutletDetail({ outletId }: Props) {
     try {
       setError("");
       await removeMenuItem(outletId, menuItemId);
+      setRemoveId(null);
       setVersion((v) => v + 1);
       setMenuVersion((v) => v + 1);
     } catch {
+      setRemoveId(null);
       setError("Failed to remove item");
     }
   }
@@ -164,7 +168,7 @@ export default function OutletDetail({ outletId }: Props) {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
-                        onClick={() => handleRemove(item.id)}
+                        onClick={() => setRemoveId(item.id)}
                         className="text-red-600 hover:text-red-800"
                       >
                         Remove
@@ -203,6 +207,14 @@ export default function OutletDetail({ outletId }: Props) {
           />
         )}
       </div>
+
+      {removeId !== null && (
+        <ConfirmDialog
+          message="Are you sure you want to remove this menu item from the outlet?"
+          onConfirm={() => handleRemove(removeId)}
+          onCancel={() => setRemoveId(null)}
+        />
+      )}
     </div>
   );
 }

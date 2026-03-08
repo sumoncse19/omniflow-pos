@@ -7,6 +7,7 @@ import {
 } from "../api/menu";
 import type { MenuItem } from "../api/menu";
 import MenuForm from "../components/MenuForm";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 export default function MenuPage() {
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -14,6 +15,7 @@ export default function MenuPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [version, setVersion] = useState(0);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,12 +51,13 @@ export default function MenuPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Delete this item?")) return;
     try {
       setError("");
       await deleteMenuItem(id);
+      setDeleteId(null);
       setVersion((v) => v + 1);
     } catch {
+      setDeleteId(null);
       setError("Failed to delete item");
     }
   }
@@ -110,7 +113,7 @@ export default function MenuPage() {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(item.id)}
+                    onClick={() => setDeleteId(item.id)}
                     className="text-red-600 hover:text-red-800"
                   >
                     Delete
@@ -128,6 +131,14 @@ export default function MenuPage() {
           </tbody>
         </table>
       </div>
+
+      {deleteId !== null && (
+        <ConfirmDialog
+          message="Are you sure you want to delete this menu item?"
+          onConfirm={() => handleDelete(deleteId)}
+          onCancel={() => setDeleteId(null)}
+        />
+      )}
     </div>
   );
 }
