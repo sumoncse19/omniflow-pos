@@ -158,9 +158,10 @@ export default function OutletDetail({ outletId }: Props) {
       <InventoryPanel
         key={`inv-${menuVersion}-${version}`}
         outletId={outletId}
+        onStockChange={() => setVersion((v) => v + 1)}
       />
       <SalesPanel
-        key={`sales-${menuVersion}`}
+        key={`sales-${menuVersion}-${version}`}
         outletId={outletId}
         onSaleComplete={() => setVersion((v) => v + 1)}
       />

@@ -6,9 +6,10 @@ import type { OutletMenuItem } from "../api/outlets";
 
 interface Props {
   outletId: number;
+  onStockChange?: () => void;
 }
 
-export default function InventoryPanel({ outletId }: Props) {
+export default function InventoryPanel({ outletId, onStockChange }: Props) {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [menuItems, setMenuItems] = useState<OutletMenuItem[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -46,6 +47,7 @@ export default function InventoryPanel({ outletId }: Props) {
       setEditingId(null);
       setStockValue("");
       setVersion((v) => v + 1);
+      onStockChange?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update stock");
     }
@@ -62,6 +64,7 @@ export default function InventoryPanel({ outletId }: Props) {
       setAddItemId("");
       setAddStock("");
       setVersion((v) => v + 1);
+      onStockChange?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add stock");
     }
