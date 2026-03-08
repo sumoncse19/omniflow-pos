@@ -13,7 +13,6 @@ export async function getOne(id: number) {
 }
 
 export async function create(name: string, location?: string) {
-  // default company for now
   return outletRepo.create(1, name, location);
 }
 

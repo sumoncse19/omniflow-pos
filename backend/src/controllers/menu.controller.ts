@@ -1,51 +1,30 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import * as menuService from "../services/menu.service";
+import { asyncHandler } from "../utils/asyncHandler";
 
-export async function getAll(req: Request, res: Response, next: NextFunction) {
-  try {
-    const items = await menuService.getAll();
-    res.json(items);
-  } catch (err) {
-    next(err);
-  }
-}
+export const getAll = asyncHandler(async (_req: Request, res: Response) => {
+  res.json(await menuService.getAll());
+});
 
-export async function getOne(req: Request, res: Response, next: NextFunction) {
-  try {
-    const item = await menuService.getOne(Number(req.params.id));
-    res.json(item);
-  } catch (err) {
-    next(err);
-  }
-}
+export const getOne = asyncHandler(async (req: Request, res: Response) => {
+  res.json(await menuService.getOne(Number(req.params.id)));
+});
 
-export async function create(req: Request, res: Response, next: NextFunction) {
-  try {
-    const item = await menuService.create(req.body.name, req.body.base_price);
-    res.status(201).json(item);
-  } catch (err) {
-    next(err);
-  }
-}
+export const create = asyncHandler(async (req: Request, res: Response) => {
+  const item = await menuService.create(req.body.name, req.body.base_price);
+  res.status(201).json(item);
+});
 
-export async function update(req: Request, res: Response, next: NextFunction) {
-  try {
-    const item = await menuService.update(
-      Number(req.params.id),
-      req.body.name,
-      req.body.base_price,
-    );
-    res.json(item);
-  } catch (err) {
-    next(err);
-  }
-}
+export const update = asyncHandler(async (req: Request, res: Response) => {
+  const item = await menuService.update(
+    Number(req.params.id),
+    req.body.name,
+    req.body.base_price,
+  );
+  res.json(item);
+});
 
-export async function remove(req: Request, res: Response, next: NextFunction) {
-  try {
-    await menuService.remove(Number(req.params.id));
-    res.status(204).send();
-  } catch (err) {
-    next(err);
-  }
-}
+export const remove = asyncHandler(async (req: Request, res: Response) => {
+  await menuService.remove(Number(req.params.id));
+  res.status(204).send();
+});
