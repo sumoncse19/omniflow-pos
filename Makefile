@@ -21,7 +21,7 @@ frontend:
 # Stop everything
 stop:
 	-kill $$(lsof -t -i:5000) 2>/dev/null || true
-	-kill $$(lsof -t -i:5175) 2>/dev/null || true
+	-kill $$(lsof -t -i:5173) 2>/dev/null || true
 	docker compose down
 
 # Install dependencies for both
