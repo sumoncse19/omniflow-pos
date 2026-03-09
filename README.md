@@ -27,7 +27,7 @@ Multi-outlet point-of-sale system where HQ manages a master menu, assigns items 
 │       ├── services/         # Business logic
 │       ├── repositories/     # Database queries
 │       ├── middleware/       # Error handler, validation, 404
-│       ├── utils/            # asyncHandler
+│       ├── utils/            # catchAsync
 │       └── config/           # DB connection pool
 ├── docker-compose.yml        # Local dev (PostgreSQL only)
 ├── Dockerfile                # Production single-container build
