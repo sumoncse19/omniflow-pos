@@ -2,6 +2,8 @@
 
 Multi-outlet point-of-sale system where HQ manages a master menu, assigns items to outlets with optional price overrides, and monitors sales across all locations. Each outlet handles its own sales transactions and inventory.
 
+**Live:** https://omniflow-pos.onrender.com
+
 ## Tech Stack
 
 - **Frontend:** React 19, TypeScript, Tailwind CSS 4, Vite
@@ -201,3 +203,5 @@ Current design handles a single-instance deployment. For 10 outlets with ~100k t
 **Caching:** Add Redis for frequently read data (outlet menus, inventory counts). Invalidate on writes. Reports can be cached with a short TTL since they don't need to be real-time.
 
 **Architectural evolution:** As transaction volume grows, the sales write path becomes the bottleneck. At that point, split sales processing into an async flow: accept the sale request, enqueue it, and process it in a background worker. This decouples the API response time from database write latency.
+
+For detailed architecture documentation including microservices conversion, offline POS strategy, and KDS communication, see [ARCHITECTURE.md](ARCHITECTURE.md).

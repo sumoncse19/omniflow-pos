@@ -1,15 +1,14 @@
 import { Request, Response } from "express";
-import * as reportsService from "../services/reports.service";
+import * as reportsRepo from "../repositories/reports.repo";
 import { asyncHandler } from "../utils/asyncHandler";
 
 export const getRevenueByOutlet = asyncHandler(
   async (_req: Request, res: Response) => {
-    res.json(await reportsService.getRevenueByOutlet());
+    res.json(await reportsRepo.getRevenueByOutlet());
   },
 );
 
 export const getTopItems = asyncHandler(async (req: Request, res: Response) => {
-  const outletId = Number(req.params.outletId);
   const limit = Number(req.query.limit) || 5;
-  res.json(await reportsService.getTopItems(outletId, limit));
+  res.json(await reportsRepo.getTopItems(Number(req.params.outletId), limit));
 });
