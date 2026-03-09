@@ -1,10 +1,9 @@
-import { useState, useEffect, type SubmitEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import { fetchSales, createSale } from "../api/sales";
 import { fetchInventory } from "../api/inventory";
 import { fetchOutletMenu } from "../api/outlets";
-import type { Sale, SaleItem } from "../api/sales";
-import type { InventoryItem } from "../api/inventory";
-import type { OutletMenuItem } from "../api/outlets";
+import type { SaleItem } from "../api/sales";
+import { useAsync } from "../hooks/useAsync";
 
 interface Props {
   outletId: number;
@@ -16,34 +15,20 @@ interface CartItem extends SaleItem {
 }
 
 export default function SalesPanel({ outletId, onSaleComplete }: Props) {
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [menuItems, setMenuItems] = useState<OutletMenuItem[]>([]);
-  const [sales, setSales] = useState<Sale[]>([]);
+  const { data, error, setError, refetch } = useAsync(
+    () =>
+      Promise.all([
+        fetchInventory(outletId),
+        fetchOutletMenu(outletId),
+        fetchSales(outletId),
+      ]),
+    [outletId],
+  );
+  const inventory = data?.[0] ?? [];
+  const menuItems = data?.[1] ?? [];
+  const sales = data?.[2] ?? [];
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedItemId, setSelectedItemId] = useState("");
-  const [error, setError] = useState("");
-  const [version, setVersion] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all([
-      fetchInventory(outletId),
-      fetchOutletMenu(outletId),
-      fetchSales(outletId),
-    ])
-      .then(([invData, menuData, salesData]) => {
-        if (cancelled) return;
-        setInventory(invData);
-        setMenuItems(menuData);
-        setSales(salesData);
-      })
-      .catch(() => {
-        if (!cancelled) setError("Failed to load sales data");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [outletId, version]);
 
   // items in stock that aren't already in cart
   const cartIds = new Set(cart.map((c) => c.menu_item_id));
@@ -112,7 +97,7 @@ export default function SalesPanel({ outletId, onSaleComplete }: Props) {
       );
       await createSale(outletId, items);
       setCart([]);
-      setVersion((v) => v + 1);
+      refetch();
       onSaleComplete();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to complete sale");

@@ -1,48 +1,33 @@
-import { useState, useEffect, type SubmitEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import {
   fetchOutletMenu,
   assignMenuItem,
   removeMenuItem,
 } from "../api/outlets";
 import { fetchMenuItems } from "../api/menu";
-import type { OutletMenuItem } from "../api/outlets";
-import type { MenuItem } from "../api/menu";
 import InventoryPanel from "./InventoryPanel";
 import SalesPanel from "./SalesPanel";
 import ConfirmDialog from "./ConfirmDialog";
+import { useAsync } from "../hooks/useAsync";
 
 interface Props {
   outletId: number;
 }
 
 export default function OutletDetail({ outletId }: Props) {
-  const [menu, setMenu] = useState<OutletMenuItem[]>([]);
-  const [allItems, setAllItems] = useState<MenuItem[]>([]);
+  const { data, error, setError, refetch } = useAsync(
+    () => Promise.all([fetchOutletMenu(outletId), fetchMenuItems()]),
+    [outletId],
+  );
+  const menu = data?.[0] ?? [];
+  const allItems = data?.[1] ?? [];
+  const [ver, setVer] = useState(0);
   const [selectedItemId, setSelectedItemId] = useState("");
   const [overridePrice, setOverridePrice] = useState("");
-  const [error, setError] = useState("");
-  const [menuVersion, setMenuVersion] = useState(0);
-  const [version, setVersion] = useState(0);
   const [activeTab, setActiveTab] = useState<"Menu" | "Inventory" | "Sales">(
     "Menu",
   );
   const [removeId, setRemoveId] = useState<number | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all([fetchOutletMenu(outletId), fetchMenuItems()])
-      .then(([menuData, itemsData]) => {
-        if (cancelled) return;
-        setMenu(menuData);
-        setAllItems(itemsData);
-      })
-      .catch(() => {
-        if (!cancelled) setError("Failed to load outlet menu");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [outletId, version]);
 
   // items not yet assigned to this outlet
   const assignedIds = new Set(menu.map((m) => m.id));
@@ -58,8 +43,8 @@ export default function OutletDetail({ outletId }: Props) {
       await assignMenuItem(outletId, itemId, price);
       setSelectedItemId("");
       setOverridePrice("");
-      setVersion((v) => v + 1);
-      setMenuVersion((v) => v + 1);
+      refetch();
+      setVer((v) => v + 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to assign");
     }
@@ -70,8 +55,8 @@ export default function OutletDetail({ outletId }: Props) {
       setError("");
       await removeMenuItem(outletId, menuItemId);
       setRemoveId(null);
-      setVersion((v) => v + 1);
-      setMenuVersion((v) => v + 1);
+      refetch();
+      setVer((v) => v + 1);
     } catch {
       setRemoveId(null);
       setError("Failed to remove item");
@@ -193,17 +178,23 @@ export default function OutletDetail({ outletId }: Props) {
 
         {activeTab === "Inventory" && (
           <InventoryPanel
-            key={`inv-${menuVersion}-${version}`}
+            key={`inv-${ver}`}
             outletId={outletId}
-            onStockChange={() => setVersion((v) => v + 1)}
+            onStockChange={() => {
+              refetch();
+              setVer((v) => v + 1);
+            }}
           />
         )}
 
         {activeTab === "Sales" && (
           <SalesPanel
-            key={`sales-${menuVersion}-${version}`}
+            key={`sales-${ver}`}
             outletId={outletId}
-            onSaleComplete={() => setVersion((v) => v + 1)}
+            onSaleComplete={() => {
+              refetch();
+              setVer((v) => v + 1);
+            }}
           />
         )}
       </div>

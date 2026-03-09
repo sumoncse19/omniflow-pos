@@ -1,8 +1,7 @@
-import { useState, useEffect, type SubmitEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import { fetchInventory, updateStock } from "../api/inventory";
 import { fetchOutletMenu } from "../api/outlets";
-import type { InventoryItem } from "../api/inventory";
-import type { OutletMenuItem } from "../api/outlets";
+import { useAsync } from "../hooks/useAsync";
 
 interface Props {
   outletId: number;
@@ -10,30 +9,16 @@ interface Props {
 }
 
 export default function InventoryPanel({ outletId, onStockChange }: Props) {
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [menuItems, setMenuItems] = useState<OutletMenuItem[]>([]);
+  const { data, error, setError, refetch } = useAsync(
+    () => Promise.all([fetchInventory(outletId), fetchOutletMenu(outletId)]),
+    [outletId],
+  );
+  const items = data?.[0] ?? [];
+  const menuItems = data?.[1] ?? [];
   const [editingId, setEditingId] = useState<number | null>(null);
   const [stockValue, setStockValue] = useState("");
   const [addItemId, setAddItemId] = useState("");
   const [addStock, setAddStock] = useState("");
-  const [error, setError] = useState("");
-  const [version, setVersion] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all([fetchInventory(outletId), fetchOutletMenu(outletId)])
-      .then(([invData, menuData]) => {
-        if (cancelled) return;
-        setItems(invData);
-        setMenuItems(menuData);
-      })
-      .catch(() => {
-        if (!cancelled) setError("Failed to load inventory");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [outletId, version]);
 
   const inventoryIds = new Set(items.map((i) => i.id));
   const missing = menuItems.filter((m) => !inventoryIds.has(m.id));
@@ -46,7 +31,7 @@ export default function InventoryPanel({ outletId, onStockChange }: Props) {
       await updateStock(outletId, menuItemId, parsed);
       setEditingId(null);
       setStockValue("");
-      setVersion((v) => v + 1);
+      refetch();
       onStockChange?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update stock");
@@ -63,7 +48,7 @@ export default function InventoryPanel({ outletId, onStockChange }: Props) {
       await updateStock(outletId, itemId, stock);
       setAddItemId("");
       setAddStock("");
-      setVersion((v) => v + 1);
+      refetch();
       onStockChange?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add stock");
