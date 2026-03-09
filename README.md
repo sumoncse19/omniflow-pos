@@ -56,7 +56,7 @@ This runs:
 
 - PostgreSQL on `localhost:5432` (via Docker)
 - Backend on `localhost:5000` (directly on host)
-- Frontend on `localhost:5175` (Vite dev server)
+- Frontend on `localhost:5173` (Vite dev server)
 
 ### Other Commands
 
