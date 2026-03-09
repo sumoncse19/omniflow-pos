@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   fetchMenuItems,
   createMenuItem,
@@ -7,31 +7,17 @@ import {
 } from "../api/menu";
 import type { MenuItem } from "../api/menu";
 import MenuForm from "../components/MenuForm";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { useAsync } from "../hooks/useAsync";
 
 export default function MenuPage() {
-  const [items, setItems] = useState<MenuItem[]>([]);
+  const { data, error, setError, loading, refetch } = useAsync(
+    () => fetchMenuItems(),
+    [],
+  );
+  const items = data ?? [];
   const [editing, setEditing] = useState<MenuItem | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [version, setVersion] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchMenuItems()
-      .then((data) => {
-        if (cancelled) return;
-        setItems(data);
-      })
-      .catch(() => {
-        if (!cancelled) setError("Failed to load menu items");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [version]);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   async function handleSave(name: string, price: number) {
     try {
@@ -42,19 +28,20 @@ export default function MenuPage() {
         await createMenuItem(name, price);
       }
       setEditing(null);
-      setVersion((v) => v + 1);
+      refetch();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     }
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Delete this item?")) return;
     try {
       setError("");
       await deleteMenuItem(id);
-      setVersion((v) => v + 1);
+      setDeleteId(null);
+      refetch();
     } catch {
+      setDeleteId(null);
       setError("Failed to delete item");
     }
   }
@@ -110,7 +97,7 @@ export default function MenuPage() {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(item.id)}
+                    onClick={() => setDeleteId(item.id)}
                     className="text-red-600 hover:text-red-800"
                   >
                     Delete
@@ -128,6 +115,14 @@ export default function MenuPage() {
           </tbody>
         </table>
       </div>
+
+      {deleteId !== null && (
+        <ConfirmDialog
+          message="Are you sure you want to delete this menu item?"
+          onConfirm={() => handleDelete(deleteId)}
+          onCancel={() => setDeleteId(null)}
+        />
+      )}
     </div>
   );
 }

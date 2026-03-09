@@ -1,30 +1,14 @@
-import { Request, Response, NextFunction } from "express";
-import * as reportsService from "../services/reports.service";
+import { Request, Response } from "express";
+import * as reportsRepo from "../repositories/reports.repo";
+import { catchAsync } from "../utils/catchAsync";
 
-export async function getRevenueByOutlet(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
-  try {
-    const data = await reportsService.getRevenueByOutlet();
-    res.json(data);
-  } catch (err) {
-    next(err);
-  }
-}
+export const getRevenueByOutlet = catchAsync(
+  async (_req: Request, res: Response) => {
+    res.json(await reportsRepo.getRevenueByOutlet());
+  },
+);
 
-export async function getTopItems(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
-  try {
-    const outletId = Number(req.params.outletId);
-    const limit = Number(req.query.limit) || 5;
-    const data = await reportsService.getTopItems(outletId, limit);
-    res.json(data);
-  } catch (err) {
-    next(err);
-  }
-}
+export const getTopItems = catchAsync(async (req: Request, res: Response) => {
+  const limit = Number(req.query.limit) || 5;
+  res.json(await reportsRepo.getTopItems(Number(req.params.outletId), limit));
+});

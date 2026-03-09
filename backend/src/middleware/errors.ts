@@ -20,21 +20,14 @@ export function errorHandler(
     return res.status(err.status).json({ error: err.message });
   }
 
-  // postgres check constraint (negative stock etc)
-  if (err.code === "23514") {
+  // pg constraint errors
+  if (err.code === "23514")
     return res.status(409).json({ error: "Insufficient stock" });
-  }
-
-  // postgres unique violation
-  if (err.code === "23505") {
-    return res.status(409).json({ error: "Already exists" });
-  }
-
-  // postgres foreign key violation
-  if (err.code === "23503") {
-    return res.status(400).json({ error: "Referenced item not found" });
-  }
+  if (err.code === "23505")
+    return res.status(409).json({ error: "Duplicate entry" });
+  if (err.code === "23503")
+    return res.status(400).json({ error: "Referenced item doesn't exist" });
 
   console.error(err);
-  res.status(500).json({ error: "Something went wrong" });
+  res.status(500).json({ error: "Internal server error" });
 }

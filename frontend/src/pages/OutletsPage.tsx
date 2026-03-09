@@ -1,34 +1,17 @@
-import { useState, useEffect, type SubmitEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import { fetchOutlets, createOutlet } from "../api/outlets";
-import type { Outlet } from "../api/outlets";
 import OutletDetail from "../components/OutletDetail";
+import { useAsync } from "../hooks/useAsync";
 
 export default function OutletsPage() {
-  const [outlets, setOutlets] = useState<Outlet[]>([]);
+  const { data, error, setError, loading, refetch } = useAsync(
+    () => fetchOutlets(),
+    [],
+  );
+  const outlets = data ?? [];
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [version, setVersion] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchOutlets()
-      .then((data) => {
-        if (cancelled) return;
-        setOutlets(data);
-      })
-      .catch(() => {
-        if (!cancelled) setError("Failed to load outlets");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [version]);
 
   async function handleCreate(e: SubmitEvent) {
     e.preventDefault();
@@ -38,7 +21,7 @@ export default function OutletsPage() {
       await createOutlet(name.trim(), location.trim() || undefined);
       setName("");
       setLocation("");
-      setVersion((v) => v + 1);
+      refetch();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     }

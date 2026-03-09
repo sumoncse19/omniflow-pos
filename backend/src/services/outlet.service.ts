@@ -2,7 +2,7 @@ import * as outletRepo from "../repositories/outlet.repo";
 import * as inventoryRepo from "../repositories/inventory.repo";
 import { AppError } from "../middleware/errors";
 
-export async function getAll() {
+export function getAll() {
   return outletRepo.findAll();
 }
 
@@ -12,16 +12,16 @@ export async function getOne(id: number) {
   return outlet;
 }
 
-export async function create(name: string, location?: string) {
-  // default company for now
+// hardcoded to company 1 for now
+export function create(name: string, location?: string) {
   return outletRepo.create(1, name, location);
 }
 
-export async function getOutletMenu(outletId: number) {
+export function getOutletMenu(outletId: number) {
   return outletRepo.getOutletMenu(outletId);
 }
 
-export async function assignMenuItem(
+export function assignMenuItem(
   outletId: number,
   menuItemId: number,
   overridePrice?: number | null,
@@ -32,6 +32,6 @@ export async function assignMenuItem(
 export async function removeMenuItem(outletId: number, menuItemId: number) {
   const removed = await outletRepo.removeMenuItem(outletId, menuItemId);
   if (!removed)
-    throw new AppError("Menu item not assigned to this outlet", 404);
+    throw new AppError("That menu item isn't assigned to this outlet", 404);
   await inventoryRepo.removeStock(outletId, menuItemId);
 }

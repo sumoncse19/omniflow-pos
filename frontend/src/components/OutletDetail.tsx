@@ -1,43 +1,33 @@
-import { useState, useEffect, type SubmitEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import {
   fetchOutletMenu,
   assignMenuItem,
   removeMenuItem,
 } from "../api/outlets";
 import { fetchMenuItems } from "../api/menu";
-import type { OutletMenuItem } from "../api/outlets";
-import type { MenuItem } from "../api/menu";
 import InventoryPanel from "./InventoryPanel";
 import SalesPanel from "./SalesPanel";
+import ConfirmDialog from "./ConfirmDialog";
+import { useAsync } from "../hooks/useAsync";
 
 interface Props {
   outletId: number;
 }
 
 export default function OutletDetail({ outletId }: Props) {
-  const [menu, setMenu] = useState<OutletMenuItem[]>([]);
-  const [allItems, setAllItems] = useState<MenuItem[]>([]);
+  const { data, error, setError, refetch } = useAsync(
+    () => Promise.all([fetchOutletMenu(outletId), fetchMenuItems()]),
+    [outletId],
+  );
+  const menu = data?.[0] ?? [];
+  const allItems = data?.[1] ?? [];
+  const [ver, setVer] = useState(0);
   const [selectedItemId, setSelectedItemId] = useState("");
   const [overridePrice, setOverridePrice] = useState("");
-  const [error, setError] = useState("");
-  const [menuVersion, setMenuVersion] = useState(0);
-  const [version, setVersion] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all([fetchOutletMenu(outletId), fetchMenuItems()])
-      .then(([menuData, itemsData]) => {
-        if (cancelled) return;
-        setMenu(menuData);
-        setAllItems(itemsData);
-      })
-      .catch(() => {
-        if (!cancelled) setError("Failed to load outlet menu");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [outletId, version]);
+  const [activeTab, setActiveTab] = useState<"Menu" | "Inventory" | "Sales">(
+    "Menu",
+  );
+  const [removeId, setRemoveId] = useState<number | null>(null);
 
   // items not yet assigned to this outlet
   const assignedIds = new Set(menu.map((m) => m.id));
@@ -53,8 +43,8 @@ export default function OutletDetail({ outletId }: Props) {
       await assignMenuItem(outletId, itemId, price);
       setSelectedItemId("");
       setOverridePrice("");
-      setVersion((v) => v + 1);
-      setMenuVersion((v) => v + 1);
+      refetch();
+      setVer((v) => v + 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to assign");
     }
@@ -64,106 +54,158 @@ export default function OutletDetail({ outletId }: Props) {
     try {
       setError("");
       await removeMenuItem(outletId, menuItemId);
-      setVersion((v) => v + 1);
-      setMenuVersion((v) => v + 1);
+      setRemoveId(null);
+      refetch();
+      setVer((v) => v + 1);
     } catch {
+      setRemoveId(null);
       setError("Failed to remove item");
     }
   }
 
-  return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <h2 className="text-lg font-semibold mb-3">Outlet Menu</h2>
+  const tabs = ["Menu", "Inventory", "Sales"] as const;
 
+  return (
+    <div className="bg-white rounded-lg shadow">
       {error && (
-        <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">
+        <div className="bg-red-100 text-red-700 px-4 py-2 rounded m-4">
           {error}
         </div>
       )}
 
-      {available.length > 0 && (
-        <form onSubmit={handleAssign} className="flex gap-3 mb-4">
-          <select
-            value={selectedItemId}
-            onChange={(e) => setSelectedItemId(e.target.value)}
-            className="border rounded px-3 py-2 flex-1"
-            required
-          >
-            <option value="">Select item to assign...</option>
-            {available.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name} (${parseFloat(item.base_price).toFixed(2)})
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            placeholder="Override price"
-            step="0.01"
-            min="0.01"
-            value={overridePrice}
-            onChange={(e) => setOverridePrice(e.target.value)}
-            className="border rounded px-3 py-2 w-36"
-          />
+      <div className="border-b flex">
+        {tabs.map((tab) => (
           <button
-            type="submit"
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-6 py-3 text-sm font-medium transition-colors ${
+              activeTab === tab
+                ? "border-b-2 border-blue-600 text-blue-600"
+                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+            }`}
           >
-            Assign
+            {tab}
+            {tab === "Menu" && menu.length > 0 && (
+              <span className="ml-2 bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">
+                {menu.length}
+              </span>
+            )}
           </button>
-        </form>
-      )}
+        ))}
+      </div>
 
-      <table className="w-full">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
-              Item
-            </th>
-            <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
-              Price
-            </th>
-            <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {menu.map((item) => (
-            <tr key={item.id} className="border-t hover:bg-gray-50">
-              <td className="px-4 py-3">{item.name}</td>
-              <td className="px-4 py-3">
-                ${parseFloat(item.price).toFixed(2)}
-              </td>
-              <td className="px-4 py-3 text-right">
-                <button
-                  onClick={() => handleRemove(item.id)}
-                  className="text-red-600 hover:text-red-800"
+      <div className="p-4">
+        {activeTab === "Menu" && (
+          <>
+            {available.length > 0 && (
+              <form onSubmit={handleAssign} className="flex gap-3 mb-4">
+                <select
+                  value={selectedItemId}
+                  onChange={(e) => setSelectedItemId(e.target.value)}
+                  className="border rounded px-3 py-2 flex-1"
+                  required
                 >
-                  Remove
+                  <option value="">Select item to assign...</option>
+                  {available.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} (${parseFloat(item.base_price).toFixed(2)})
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  placeholder="Override price"
+                  step="0.01"
+                  min="0.01"
+                  value={overridePrice}
+                  onChange={(e) => setOverridePrice(e.target.value)}
+                  className="border rounded px-3 py-2 w-36"
+                />
+                <button
+                  type="submit"
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                >
+                  Assign
                 </button>
-              </td>
-            </tr>
-          ))}
-          {menu.length === 0 && (
-            <tr>
-              <td colSpan={3} className="px-4 py-6 text-center text-gray-400">
-                No items assigned
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+              </form>
+            )}
 
-      <InventoryPanel
-        key={`inv-${menuVersion}-${version}`}
-        outletId={outletId}
-      />
-      <SalesPanel
-        key={`sales-${menuVersion}`}
-        outletId={outletId}
-        onSaleComplete={() => setVersion((v) => v + 1)}
-      />
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                    Item
+                  </th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">
+                    Price
+                  </th>
+                  <th className="text-right px-4 py-3 text-sm font-medium text-gray-600">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {menu.map((item) => (
+                  <tr key={item.id} className="border-t hover:bg-gray-50">
+                    <td className="px-4 py-3">{item.name}</td>
+                    <td className="px-4 py-3">
+                      ${parseFloat(item.price).toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => setRemoveId(item.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {menu.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={3}
+                      className="px-4 py-6 text-center text-gray-400"
+                    >
+                      No items assigned
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </>
+        )}
+
+        {activeTab === "Inventory" && (
+          <InventoryPanel
+            key={`inv-${ver}`}
+            outletId={outletId}
+            onStockChange={() => {
+              refetch();
+              setVer((v) => v + 1);
+            }}
+          />
+        )}
+
+        {activeTab === "Sales" && (
+          <SalesPanel
+            key={`sales-${ver}`}
+            outletId={outletId}
+            onSaleComplete={() => {
+              refetch();
+              setVer((v) => v + 1);
+            }}
+          />
+        )}
+      </div>
+
+      {removeId !== null && (
+        <ConfirmDialog
+          message="Are you sure you want to remove this menu item from the outlet?"
+          onConfirm={() => handleRemove(removeId)}
+          onCancel={() => setRemoveId(null)}
+        />
+      )}
     </div>
   );
 }

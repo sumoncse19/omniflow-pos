@@ -9,6 +9,7 @@ import inventoryRoutes from "./routes/inventory.routes";
 import salesRoutes from "./routes/sales.routes";
 import reportsRoutes from "./routes/reports.routes";
 import { errorHandler } from "./middleware/errors";
+import notFound from "./middleware/notFound";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api/outlets/:outletId/inventory", inventoryRoutes);
 app.use("/api/outlets/:outletId/sales", salesRoutes);
 app.use("/api/reports", reportsRoutes);
 
+app.use("/api", notFound);
 app.use(errorHandler);
 
 // Serve frontend in production
