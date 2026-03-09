@@ -51,6 +51,7 @@ make dev
 ```
 
 This runs:
+
 - PostgreSQL on `localhost:5432` (via Docker)
 - Backend on `localhost:5000` (directly on host)
 - Frontend on `localhost:5175` (Vite dev server)
@@ -84,45 +85,44 @@ Base URL: `/api`
 
 ### Menu (HQ master menu)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/menu` | List all menu items |
-| GET | `/menu/:id` | Get one menu item |
-| POST | `/menu` | Create menu item (`name`, `base_price`) |
-| PUT | `/menu/:id` | Update menu item |
-| DELETE | `/menu/:id` | Delete menu item |
+| Method | Endpoint    | Description                             |
+| ------ | ----------- | --------------------------------------- |
+| GET    | `/menu`     | List all menu items                     |
+| GET    | `/menu/:id` | Get one menu item                       |
+| POST   | `/menu`     | Create menu item (`name`, `base_price`) |
+| PUT    | `/menu/:id` | Update menu item                        |
+| DELETE | `/menu/:id` | Delete menu item                        |
 
 ### Outlets
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/outlets` | List all outlets |
-| GET | `/outlets/:id` | Get one outlet |
-| POST | `/outlets` | Create outlet (`name`, `location?`) |
-| GET | `/outlets/:id/menu` | Get menu items assigned to outlet |
-| POST | `/outlets/:id/menu` | Assign menu item (`menu_item_id`, `override_price?`) |
-| DELETE | `/outlets/:id/menu/:menuItemId` | Remove menu item from outlet |
+| Method | Endpoint                        | Description                                          |
+| ------ | ------------------------------- | ---------------------------------------------------- |
+| GET    | `/outlets`                      | List all outlets                                     |
+| GET    | `/outlets/:id`                  | Get one outlet                                       |
+| POST   | `/outlets`                      | Create outlet (`name`, `location?`)                  |
+| GET    | `/outlets/:id/menu`             | Get menu items assigned to outlet                    |
+| POST   | `/outlets/:id/menu`             | Assign menu item (`menu_item_id`, `override_price?`) |
+| DELETE | `/outlets/:id/menu/:menuItemId` | Remove menu item from outlet                         |
 
 ### Inventory (per outlet)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/outlets/:outletId/inventory` | Get outlet inventory |
-| PUT | `/outlets/:outletId/inventory` | Set stock (`menu_item_id`, `stock`) |
+| Method | Endpoint                       | Description                         |
+| ------ | ------------------------------ | ----------------------------------- |
+| GET    | `/outlets/:outletId/inventory` | Get outlet inventory                |
+| PUT    | `/outlets/:outletId/inventory` | Set stock (`menu_item_id`, `stock`) |
 
 ### Sales (per outlet)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/outlets/:outletId/sales` | List outlet sales |
-| POST | `/outlets/:outletId/sales` | Create sale (`items[]`) |
+| Method | Endpoint                   | Description             |
+| ------ | -------------------------- | ----------------------- |
+| GET    | `/outlets/:outletId/sales` | List outlet sales       |
+| POST   | `/outlets/:outletId/sales` | Create sale (`items[]`) |
 
 Sale request body:
+
 ```json
 {
-  "items": [
-    { "menu_item_id": 1, "name": "Burger", "qty": 2, "price": 8.50 }
-  ]
+  "items": [{ "menu_item_id": 1, "name": "Burger", "qty": 2, "price": 8.5 }]
 }
 ```
 
@@ -130,18 +130,22 @@ Each sale generates a sequential receipt number per outlet per day: `RCP-{outlet
 
 ### Reports
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/reports/revenue` | Total revenue by outlet |
-| GET | `/reports/top-items/:outletId?limit=5` | Top selling items per outlet |
+| Method | Endpoint                               | Description                  |
+| ------ | -------------------------------------- | ---------------------------- |
+| GET    | `/reports/revenue`                     | Total revenue by outlet      |
+| GET    | `/reports/top-items/:outletId?limit=5` | Top selling items per outlet |
 
 ### Health
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Returns `{ status: "ok" }` |
+| Method | Endpoint  | Description                |
+| ------ | --------- | -------------------------- |
+| GET    | `/health` | Returns `{ status: "ok" }` |
 
 ## Database Schema
+
+[View ERD on dbdiagram.io](https://dbdiagram.io/d/omniflow-pos-69ae702dcf54053b6f389d01)
+
+![Database ERD](ERD.png)
 
 Seven tables, designed around the multi-outlet model:
 
